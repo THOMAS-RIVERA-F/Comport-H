@@ -1,356 +1,208 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import {
+  BrainCircuit,
   CheckCircle2,
   FileUp,
-  Fingerprint,
-  FolderOpen,
+  Orbit,
   RadioReceiver,
-  UploadCloud
+  Sparkles
 } from "lucide-react";
-import { fileTypes, uploadQueue } from "@/lib/data";
+import type { OrganizationGroup } from "@/lib/data";
+import { intelligenceSteps, neuralDocuments } from "@/lib/data";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { NeuralIngestionSpace } from "@/components/neural-ingestion-space";
 import { PremiumCard } from "@/components/ui/premium-card";
 
-export function UploadCenter() {
+type UploadCenterProps = {
+  activeGroup: OrganizationGroup | null;
+};
+
+export function UploadCenter({ activeGroup }: UploadCenterProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [localFiles, setLocalFiles] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   function captureFiles(files: FileList | null) {
     if (!files?.length) return;
-    setLocalFiles(Array.from(files).map((file) => file.name).slice(0, 4));
+    setLocalFiles(Array.from(files).map((file) => file.name).slice(0, 6));
   }
 
+  const hasFiles = localFiles.length > 0;
+
   return (
-    <div className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
-      <PremiumCard
-        intensity="command"
+    <div className="grid gap-5 xl:grid-cols-[minmax(0,1.35fr)_390px]">
+      <section
         className={cn(
-          "relative min-h-[660px] overflow-hidden p-4 transition duration-500 sm:p-6 lg:p-8",
-          isDragging && "border-ivory/40 shadow-[0_0_72px_rgba(255,245,210,0.24)]"
+          "relative min-h-[720px] overflow-hidden rounded-[8px] border border-white/[0.08] bg-[#050505] shadow-[0_24px_90px_rgba(0,0,0,0.58)] transition duration-500",
+          isDragging && "border-ivory/45 shadow-[0_0_90px_rgba(255,230,170,0.2)]"
         )}
+        onDragEnter={(event) => {
+          event.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={(event) => {
+          event.preventDefault();
+          if (event.currentTarget === event.target) setIsDragging(false);
+        }}
+        onDrop={(event) => {
+          event.preventDefault();
+          setIsDragging(false);
+          captureFiles(event.dataTransfer.files);
+        }}
       >
-        <div className="absolute inset-0 bg-[linear-gradient(115deg,rgba(255,244,214,0.09),transparent_28%,rgba(255,255,255,0.035)_64%,transparent)]" />
-        <div
-          className={cn(
-            "relative grid min-h-[600px] place-items-center rounded-[8px] border border-dashed border-white/[0.14] bg-black/34 transition duration-500",
-            isDragging && "border-ivory/70 bg-ivory/[0.055]"
-          )}
-          onDragEnter={(event) => {
-            event.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragOver={(event) => {
-            event.preventDefault();
-            setIsDragging(true);
-          }}
-          onDragLeave={(event) => {
-            event.preventDefault();
-            if (event.currentTarget === event.target) {
-              setIsDragging(false);
-            }
-          }}
-          onDrop={(event) => {
-            event.preventDefault();
-            setIsDragging(false);
-            captureFiles(event.dataTransfer.files);
-          }}
-          role="button"
-          tabIndex={0}
-          onClick={() => inputRef.current?.click()}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              inputRef.current?.click();
-            }
-          }}
-        >
-          <input
-            ref={inputRef}
-            type="file"
-            multiple
-            className="hidden"
-            accept=".pdf,.xlsx,.xls,.ppt,.pptx,.doc,.docx,.one"
-            onChange={(event) => captureFiles(event.currentTarget.files)}
-          />
+        <input
+          ref={inputRef}
+          type="file"
+          multiple
+          className="hidden"
+          accept=".pdf,.xlsx,.xls,.ppt,.pptx,.doc,.docx,.one"
+          onChange={(event) => captureFiles(event.currentTarget.files)}
+        />
 
-          <NeuralDropCore isDragging={isDragging} />
+        <NeuralIngestionSpace files={localFiles} isDragging={isDragging} />
 
-          <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center px-5 text-center">
-            <div className="grid h-20 w-20 place-items-center rounded-full border border-ivory/24 bg-ivory/[0.08] shadow-[0_0_44px_rgba(255,245,210,0.26)]">
-              <UploadCloud className="h-9 w-9 text-ivory" />
-            </div>
-            <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.32em] text-ash">
-              Neural ingestion bay
-            </p>
-            <h2 className="glow-text mt-4 text-4xl font-semibold leading-none text-white sm:text-5xl">
-              Alimenta la inteligencia.
-            </h2>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-vapor/76">
-              Suelta documentos empresariales y observa como la interfaz activa
-              el campo semantico, aun con datos simulados.
-            </p>
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_48%,transparent_34%,rgba(5,5,5,0.38)_68%,rgba(5,5,5,0.94)_100%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),transparent_22%,rgba(255,230,170,0.04)_72%,transparent)]" />
 
-            <div className="mt-8 flex flex-wrap justify-center gap-2">
-              {fileTypes.map((fileType) => {
-                const Icon = fileType.icon;
-
-                return (
-                  <span
-                    key={fileType.label}
-                    className="group inline-flex items-center gap-2 rounded-[8px] border border-white/[0.09] bg-white/[0.035] px-3 py-2 text-sm text-vapor transition hover:border-ivory/26 hover:bg-ivory/[0.06]"
-                  >
-                    <Icon className="h-4 w-4 text-ivory/82" />
-                    {fileType.label}
-                  </span>
-                );
-              })}
-            </div>
-
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-              <Button
-                variant="primary"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  inputRef.current?.click();
-                }}
-              >
-                <FileUp className="h-4 w-4" />
-                Seleccionar archivos
-              </Button>
-              <Button
-                variant="metal"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <FolderOpen className="h-4 w-4" />
-                Biblioteca simulada
-              </Button>
-            </div>
-
-            {localFiles.length > 0 ? (
-              <div className="mt-8 w-full max-w-xl rounded-[8px] border border-ivory/20 bg-black/45 p-4 text-left backdrop-blur-xl">
-                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-ivory">
-                  Captura local
-                </p>
-                <div className="mt-3 space-y-2">
-                  {localFiles.map((file) => (
-                    <div
-                      key={file}
-                      className="flex items-center gap-2 text-sm text-vapor"
-                    >
-                      <CheckCircle2 className="h-4 w-4 text-ivory" />
-                      <span className="truncate">{file}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
+        <div className="absolute left-5 top-5 z-10 max-w-xl sm:left-7 sm:top-7">
+          <div className="inline-flex items-center gap-2 rounded-[8px] border border-ivory/18 bg-black/42 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.26em] text-ivory backdrop-blur-xl">
+            <BrainCircuit className="h-4 w-4" />
+            Organizational brain
           </div>
+          <h2 className="glow-text mt-5 text-3xl font-semibold leading-tight text-white sm:text-5xl">
+            Alimenta una inteligencia viva.
+          </h2>
+          <p className="mt-4 max-w-lg text-sm leading-6 text-vapor/74 sm:text-base">
+            {activeGroup
+              ? `${activeGroup.name} esta absorbiendo documentos y transformandolos en senales humanas.`
+              : "Crea un grupo para que cada archivo tenga contexto organizacional."}
+          </p>
         </div>
-      </PremiumCard>
 
-      <div className="grid gap-5">
-        <PremiumCard className="min-h-[292px] overflow-hidden p-0">
-          <div className="relative h-[292px]">
-            <Image
-              src="/neural/hombre-neuronal.png"
-              alt="Perfil neuronal conectado"
-              fill
-              sizes="(min-width: 1280px) 32vw, 100vw"
-              className="object-cover object-center opacity-78 mix-blend-screen"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/22 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-5">
-              <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.24em] text-ivory">
-                <Fingerprint className="h-4 w-4" />
-                Identity fusion
-              </div>
-              <p className="mt-3 text-2xl font-semibold text-white">
-                Cada archivo se convierte en senal humana.
+        <div className="absolute inset-x-4 bottom-5 z-10 flex flex-col items-start justify-between gap-4 rounded-[8px] border border-white/[0.08] bg-black/44 p-4 backdrop-blur-2xl sm:inset-x-7 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <span className="grid h-12 w-12 place-items-center rounded-full border border-ivory/30 bg-ivory/[0.08] shadow-[0_0_34px_rgba(255,230,170,0.22)]">
+              <Orbit className="h-5 w-5 animate-breathe text-ivory" />
+            </span>
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-ash">
+                {hasFiles ? "Archivos conectados" : "Nucleo listo"}
+              </p>
+              <p className="mt-1 text-sm font-medium text-white">
+                {hasFiles
+                  ? `${localFiles.length} objetos orbitando la esfera`
+                  : `${neuralDocuments.length} documentos mock en simulacion`}
               </p>
             </div>
           </div>
-        </PremiumCard>
+          <Button
+            variant="primary"
+            onClick={() => inputRef.current?.click()}
+            className="pointer-events-auto"
+          >
+            <FileUp className="h-4 w-4" />
+            Conectar archivos
+          </Button>
+        </div>
 
-        <PremiumCard>
+        {isDragging ? (
+          <motion.div
+            className="pointer-events-none absolute inset-0 z-20 grid place-items-center bg-ivory/[0.035] backdrop-blur-[2px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            <div className="rounded-[8px] border border-ivory/35 bg-black/62 px-5 py-4 text-center shadow-[0_0_52px_rgba(255,230,170,0.28)]">
+              <Sparkles className="mx-auto h-6 w-6 text-ivory" />
+              <p className="mt-3 text-sm font-semibold text-white">
+                La esfera esta lista para absorber conocimiento
+              </p>
+            </div>
+          </motion.div>
+        ) : null}
+      </section>
+
+      <aside className="grid gap-5">
+        <PremiumCard className="p-5">
           <div className="flex items-center justify-between gap-3">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-ash">
-                Cola de procesamiento
+                Evolution pipeline
               </p>
               <h3 className="mt-2 text-xl font-semibold text-white">
-                Simulacion activa
+                Inteligencia en formacion
               </h3>
             </div>
             <RadioReceiver className="h-5 w-5 animate-breathe text-ivory" />
           </div>
 
           <div className="mt-6 space-y-3">
-            {uploadQueue.map((item, index) => (
-              <div
-                key={item.name}
-                className="rounded-[8px] border border-white/[0.08] bg-white/[0.025] p-4"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-white">
-                      {item.name}
-                    </p>
-                    <p className="mt-1 text-xs text-ash">{item.state}</p>
+            {intelligenceSteps.map((step, index) => {
+              const Icon = step.icon;
+              const active = index < (hasFiles ? 8 : 5);
+
+              return (
+                <motion.div
+                  key={step.label}
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.04 }}
+                  className="rounded-[8px] border border-white/[0.08] bg-white/[0.025] p-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={cn(
+                        "grid h-9 w-9 shrink-0 place-items-center rounded-[8px] border",
+                        active
+                          ? "border-ivory/24 bg-ivory/[0.08] text-ivory shadow-[0_0_22px_rgba(255,230,170,0.16)]"
+                          : "border-white/[0.08] bg-white/[0.025] text-ash"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-white">
+                        {step.label}
+                      </p>
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
+                        <motion.div
+                          className="h-full rounded-full bg-ivory shadow-[0_0_18px_rgba(255,230,170,0.55)]"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${active ? step.progress : 22}%` }}
+                          transition={{ duration: 1.1, delay: index * 0.05 }}
+                        />
+                      </div>
+                    </div>
+                    {active ? (
+                      <CheckCircle2 className="h-4 w-4 text-ivory" />
+                    ) : null}
                   </div>
-                  <span className="font-mono text-xs text-ivory">
-                    {item.progress}%
-                  </span>
-                </div>
-                <div className="mt-4 flex items-center gap-1.5">
-                  {Array.from({ length: 16 }).map((_, segment) => (
-                    <motion.span
-                      key={segment}
-                      className="h-1.5 flex-1 rounded-full bg-ivory/12"
-                      animate={{
-                        opacity:
-                          segment < Math.round(item.progress / 6.25)
-                            ? [0.52, 1, 0.72]
-                            : 0.18
-                      }}
-                      transition={{
-                        duration: 1.6,
-                        repeat: Infinity,
-                        delay: index * 0.15 + segment * 0.025
-                      }}
-                      style={{
-                        background:
-                          segment < Math.round(item.progress / 6.25)
-                            ? "rgba(255,244,214,0.86)"
-                            : "rgba(255,255,255,0.08)",
-                        boxShadow:
-                          segment < Math.round(item.progress / 6.25)
-                            ? "0 0 14px rgba(255,245,210,0.44)"
-                            : "none"
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         </PremiumCard>
 
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
-          {fileTypes.slice(0, 4).map((fileType) => {
-            const Icon = fileType.icon;
-
-            return (
-              <PremiumCard key={fileType.label} className="p-4">
-                <div className="flex items-center gap-3">
-                  <span className="grid h-10 w-10 place-items-center rounded-[8px] border border-ivory/18 bg-ivory/[0.06] text-ivory">
-                    <Icon className="h-5 w-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white">
-                      {fileType.label}
-                    </p>
-                    <p className="truncate text-xs text-ash">
-                      {fileType.signature}
-                    </p>
-                  </div>
-                </div>
-              </PremiumCard>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function NeuralDropCore({ isDragging }: { isDragging: boolean }) {
-  return (
-    <div className="absolute inset-0 overflow-hidden rounded-[8px]">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,244,214,0.16),transparent_28%)] opacity-80" />
-      {Array.from({ length: 4 }).map((_, index) => (
-        <motion.span
-          key={index}
-          className="absolute left-1/2 top-1/2 rounded-full border border-ivory/18"
-          style={{
-            width: 180 + index * 112,
-            height: 180 + index * 112,
-            marginLeft: -(90 + index * 56),
-            marginTop: -(90 + index * 56)
-          }}
-          animate={{
-            scale: isDragging ? [0.88, 1.12, 0.92] : [0.94, 1.02, 0.94],
-            opacity: isDragging ? [0.24, 0.72, 0.2] : [0.12, 0.26, 0.12]
-          }}
-          transition={{
-            duration: isDragging ? 1.5 : 5.5,
-            delay: index * 0.2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        />
-      ))}
-      <svg
-        className="absolute inset-0 h-full w-full opacity-70"
-        viewBox="0 0 100 100"
-        preserveAspectRatio="none"
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient id="dropLine" x1="0" x2="1" y1="0" y2="1">
-            <stop offset="0%" stopColor="rgba(255,244,214,0)" />
-            <stop offset="50%" stopColor="rgba(255,244,214,0.62)" />
-            <stop offset="100%" stopColor="rgba(255,244,214,0)" />
-          </linearGradient>
-        </defs>
-        {[
-          "M12 21 C32 42 46 18 61 42 S84 68 94 35",
-          "M8 72 C28 54 41 88 58 66 S79 34 96 59",
-          "M21 7 C45 28 37 58 64 52 S73 25 93 18",
-          "M4 45 C29 40 36 62 50 50 S74 34 97 42"
-        ].map((path, index) => (
-          <motion.path
-            key={path}
-            d={path}
-            fill="none"
-            stroke="url(#dropLine)"
-            strokeWidth={isDragging ? 0.34 : 0.18}
-            strokeDasharray="4 10"
-            animate={{ strokeDashoffset: [120, 0] }}
-            transition={{
-              duration: isDragging ? 2.2 : 8 + index,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-          />
-        ))}
-      </svg>
-      {Array.from({ length: 22 }).map((_, index) => (
-        <motion.span
-          key={index}
-          className="absolute h-1 w-1 rounded-full bg-ivory"
-          style={{
-            left: `${12 + ((index * 17) % 76)}%`,
-            top: `${14 + ((index * 23) % 72)}%`,
-            boxShadow: "0 0 18px rgba(255,245,210,0.82)"
-          }}
-          animate={{
-            opacity: isDragging ? [0.28, 1, 0.44] : [0.12, 0.42, 0.16],
-            y: isDragging ? [0, -22, 0] : [0, -8, 0],
-            scale: isDragging ? [0.8, 1.8, 0.9] : [0.7, 1.1, 0.8]
-          }}
-          transition={{
-            duration: isDragging ? 1.4 + (index % 4) * 0.18 : 5 + (index % 5),
-            repeat: Infinity,
-            delay: index * 0.04,
-            ease: "easeInOut"
-          }}
-        />
-      ))}
+        <PremiumCard className="p-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-ash">
+            Senal del grupo
+          </p>
+          <p className="mt-4 text-3xl font-semibold text-white">
+            {activeGroup?.intelligence ?? 0}
+          </p>
+          <p className="mt-3 leading-6 text-vapor/68">
+            {activeGroup?.signal ??
+              "Selecciona un grupo para consolidar senales de personas y documentos."}
+          </p>
+        </PremiumCard>
+      </aside>
     </div>
   );
 }

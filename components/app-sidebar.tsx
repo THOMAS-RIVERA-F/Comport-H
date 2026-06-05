@@ -7,10 +7,15 @@ import { Activity, Hexagon, LockKeyhole, RadioTower } from "lucide-react";
 
 type AppSidebarProps = {
   activeView: ViewId;
+  activeGroupName?: string;
   onViewChange: (view: ViewId) => void;
 };
 
-export function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
+export function AppSidebar({
+  activeView,
+  activeGroupName,
+  onViewChange
+}: AppSidebarProps) {
   return (
     <aside className="fixed inset-y-0 left-0 z-20 hidden w-[280px] border-r border-white/[0.07] bg-black/40 px-5 py-6 backdrop-blur-2xl lg:flex lg:flex-col">
       <div className="flex items-center gap-3">
@@ -28,7 +33,16 @@ export function AppSidebar({ activeView, onViewChange }: AppSidebarProps) {
         </div>
       </div>
 
-      <nav className="mt-10 space-y-2">
+      <div className="mt-7 rounded-[8px] border border-white/[0.08] bg-white/[0.035] p-4">
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-ash">
+          Grupo activo
+        </p>
+        <p className="mt-2 line-clamp-2 text-sm font-medium text-white">
+          {activeGroupName ?? "Sin grupo creado"}
+        </p>
+      </div>
+
+      <nav className="mt-6 space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeView === item.id;

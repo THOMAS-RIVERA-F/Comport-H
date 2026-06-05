@@ -7,10 +7,15 @@ import { Bell, Command, Search, SlidersHorizontal } from "lucide-react";
 
 type TopNavigationProps = {
   activeView: ViewId;
+  activeGroupName?: string;
   onViewChange: (view: ViewId) => void;
 };
 
-export function TopNavigation({ activeView, onViewChange }: TopNavigationProps) {
+export function TopNavigation({
+  activeView,
+  activeGroupName,
+  onViewChange
+}: TopNavigationProps) {
   const active = navItems.find((item) => item.id === activeView) ?? navItems[0];
 
   return (
@@ -18,7 +23,7 @@ export function TopNavigation({ activeView, onViewChange }: TopNavigationProps) 
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-ash">
-            Intelligence workspace
+            {activeGroupName ?? "Intelligence workspace"}
           </p>
           <h1 className="mt-1 text-lg font-semibold text-white sm:text-xl">
             {active.label}
